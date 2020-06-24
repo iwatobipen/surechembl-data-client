@@ -55,18 +55,18 @@ class NewFileReader:
 
         data = []
         def handle_binary(more_data):
-            data.append(more_data)
+            data.append(more_data.decode())
 
         try:
             self.ftp.retrbinary("RETR " + self.NEW_FILES_NAME, handle_binary)
-        except ftplib.error_perm, exc:
+        except ftplib.error_perm as exc:
             if exc.message.startswith("550"):
                 raise ValueError("No new files entry was found for [{}]".format(from_date))
             raise
 
         content = "".join(data)
         rel_file_list = content.split('\n')
-        abs_file_list = map( lambda f: "{0}/{1}".format(self.FRONT_FILE_LOC, f), rel_file_list)
+        abs_file_list = ["{0}/{1}".format(self.FRONT_FILE_LOC, f) for f in rel_file_list]
 
         logger.info( "Discovered {} new files".format(len(abs_file_list)) )
 
@@ -93,7 +93,7 @@ class NewFileReader:
         self._change_to_data_dir(day_files_path)
 
         ftp_file_list = self.ftp.nlst()
-        abs_file_list = map( lambda f: "{0}/{1}".format(day_files_path, f), ftp_file_list)
+        abs_file_list = ["{0}/{1}".format(day_files_path, f) for f in ftp_file_list]
 
         logger.info( "Discovered {} files".format(len(abs_file_list)) )
 
@@ -117,7 +117,7 @@ class NewFileReader:
         self._change_to_data_dir(year_path)
 
         ftp_file_list = self.ftp.nlst()
-        abs_file_list = map( lambda f: "{0}/{1}".format(year_path, f), ftp_file_list)
+        abs_file_list = ["{0}/{1}".format(year_path, f) for f in ftp_file_list]
 
         logger.info( "Discovered {} files".format(len(abs_file_list)) )
 
@@ -128,7 +128,7 @@ class NewFileReader:
         """A wrapper for changing directory, to raise an appropriate exception when no data found"""
         try:
             self.ftp.cwd(expected_data_dir)
-        except ftplib.error_perm, exc:
+        except ftplib.error_perm as exc:
             if exc.message.startswith("550"):
                 raise ValueError("No data found for given date. Target folder: [{}]".format(expected_data_dir))
             else:
@@ -160,7 +160,7 @@ class NewFileReader:
             elif file.endswith(self.SUFFIX_CHEM):
                 chem_files.add(file)
 
-        supp_chems = filter( lambda f: self.supp_regex.search(f), file_list )
+        supp_chems = [f for f in file_list if self.supp_regex.search(f)]
 
         for sc in supp_chems:
             bibl_files.add( self.supp_regex.sub(self.SUFFIX_BIBLIO, sc) )
@@ -181,7 +181,7 @@ class NewFileReader:
 
         logger.info( "Creating target directory for download: [{}]".format(target_dir) )
         if not os.path.exists(target_dir):
-            os.makedirs(target_dir, mode=0755)
+            os.makedirs(target_dir, mode=0o755)
 
         for file_path in file_list:
 

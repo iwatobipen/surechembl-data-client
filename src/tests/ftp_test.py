@@ -11,6 +11,7 @@ from mock import MagicMock, ANY
 from mock import call
 
 from src.scripts.new_file_reader import NewFileReader
+from functools import reduce
 
 logging.basicConfig( format='%(asctime)s %(levelname)s %(name)s %(message)s', level=logging.DEBUG)
 
@@ -52,7 +53,7 @@ class FTPTests(unittest.TestCase):
         self.reader = NewFileReader(self.ftp)
 
     def test_create_new_file_reader(self):
-        self.failUnless( isinstance(self.reader, NewFileReader) )
+        self.assertTrue( isinstance(self.reader, NewFileReader) )
 
     def test_find_new_change_working_dir(self):
         self.reader.get_frontfile_new( datetime.date(2013,11,4) )
@@ -65,7 +66,7 @@ class FTPTests(unittest.TestCase):
         self.ftp.cwd.assert_called_with( "/data/external/frontfile/1998/01/03" )
         self.ftp.retrbinary.assert_called_with( "RETR newfiles.txt", ANY )
 
-        self.failUnlessEqual(
+        self.assertEqual(
             files,
             ['/data/external/frontfile/path/to/file/1',
              '/data/external/frontfile/path/to/file/2',
@@ -84,13 +85,13 @@ class FTPTests(unittest.TestCase):
 
     def verify_file_retrieval(self, f, exp_path):
         ftp_file_list = ['file0.biblio.json.gz', 'file2.txt', 'file3.chemicals.tsv.gz']
-        exp_file_list = map( lambda f: "{}/{}".format(exp_path,f), ftp_file_list)
+        exp_file_list = ["{}/{}".format(exp_path,f) for f in ftp_file_list]
         self.ftp.nlst = MagicMock(return_value=ftp_file_list)
 
         actual_files = f()
         self.ftp.cwd.assert_called_with(exp_path)
         self.ftp.nlst.assert_called_with()
-        self.failUnlessEqual( exp_file_list, actual_files )
+        self.assertEqual( exp_file_list, actual_files )
 
 
     def test_select_downloads(self):
@@ -113,7 +114,7 @@ class FTPTests(unittest.TestCase):
 
     def verify_dl_list(self, input_list, expected):
         actual = self.reader.select_downloads(input_list)
-        self.failUnlessEqual(expected, actual)
+        self.assertEqual(expected, actual)
 
 
     def test_read_files(self):
@@ -132,20 +133,20 @@ class FTPTests(unittest.TestCase):
 
     def verify_dl_content(self, file_path, expected):
         content = open(file_path).read()
-        self.failUnlessEqual(content, expected)
+        self.assertEqual(content, expected)
 
 
     def test_bad_dates(self):
         self.handle_missing_date( lambda : self.reader.get_frontfile_new( datetime.date(2953,11,4) ), "/data/external/frontfile/2953/11/04")
         self.handle_missing_date( lambda : self.reader.get_frontfile_all( datetime.date(2053,10,1) ), "/data/external/frontfile/2053/10/01")
-        self.handle_missing_date( lambda : self.reader.get_backfile_year( datetime.date(2121,01,01) ), "/data/external/backfile/2121")
+        self.handle_missing_date( lambda : self.reader.get_backfile_year( datetime.date(2121,0o1,0o1) ), "/data/external/backfile/2121")
 
     def handle_missing_date(self, f, dir_str):
         self.ftp.cwd.side_effect = [None, ftplib.error_perm("550 Failed to change directory.")]
         try:
             f()
             self.fail("Exception expected")
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual("No data found for given date. Target folder: [{}]".format(dir_str), e.message)
 
     def test_no_new_files(self):
@@ -153,13 +154,13 @@ class FTPTests(unittest.TestCase):
             self.ftp.retrbinary.side_effect = ftplib.error_perm("550 Failed to open file.")
             self.reader.get_frontfile_new( datetime.date(2113,11,4) )
             self.fail("Exception expected")
-        except ValueError, e:
+        except ValueError as e:
             self.assertEqual("No new files entry was found for [2113-11-04]", e.message)
 
     def test_sync_lock_get_files(self):
         self.verify_sync_lock( lambda: self.reader.get_frontfile_all( datetime.date(2013, 11, 4) ), "/data/external/frontfile/2013/11/04" )
         self.verify_sync_lock( lambda: self.reader.get_frontfile_new( datetime.date(2014, 12, 5) ), "/data/external/frontfile/2014/12/05" )
-        self.verify_sync_lock( lambda: self.reader.get_backfile_year( datetime.date(2121,01,01) ), "/data/external/backfile/2121")
+        self.verify_sync_lock( lambda: self.reader.get_backfile_year( datetime.date(2121,0o1,0o1) ), "/data/external/backfile/2121")
 
     def verify_sync_lock(self, f, target_dir):
         ftp_file_list = ['data', 'upload', 'sync.lck']
@@ -168,7 +169,7 @@ class FTPTests(unittest.TestCase):
         try:
             f()
             self.fail("Exception expected")
-        except RuntimeError, e:
+        except RuntimeError as e:
             self.ftp.cwd.assert_called_with("/")
             self.ftp.nlst.assert_called_with()
             self.assertEqual("SureChEMBL FTP server is currently locked", e.message)

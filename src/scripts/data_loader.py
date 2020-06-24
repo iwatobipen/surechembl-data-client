@@ -328,7 +328,7 @@ class DataLoader:
 
                         doc_insert_time += (end-start)
 
-                    except Exception, exc:
+                    except Exception as exc:
 
                         if exc.__class__.__name__ != "IntegrityError":
                             raise
@@ -449,7 +449,7 @@ class DataLoader:
         """Retrieve and parse the publication number"""
         try:
             pubnumber = bib_scalar(bib, 'pubnumber')
-        except KeyError, exc:
+        except KeyError as exc:
             raise RuntimeError("Document is missing mandatory biblio field (KeyError: {})".format(exc))
         if len(pubnumber) == 0:
             raise RuntimeError("Document publication number field is empty")
@@ -465,7 +465,7 @@ class DataLoader:
             family_id = int(fam_raw) if fam_raw != None else fam_raw
             assign_applic_raw = bib.get('assign_applic')
             assign_applic = '|'.join(assign_applic_raw) if len(assign_applic_raw) > 0 else ""
-        except KeyError, exc:
+        except KeyError as exc:
             raise RuntimeError("Document is missing mandatory biblio field (KeyError: {})".format(exc))
         if len(pubnumber) == 0:
             raise RuntimeError("Document publication number field is empty")
@@ -502,7 +502,7 @@ class DataLoader:
                         title = min(title, unique_titles[title_lang][2])
                     unique_titles[title_lang] = (doc_id, title_lang, title )
 
-                new_titles.extend(unique_titles.values())
+                new_titles.extend(list(unique_titles.values()))
 
             except KeyError:
                 logger.warn(
@@ -697,7 +697,7 @@ class DBBatcher:
 
             logger.info("Operation [{}] took {:.3f} seconds; {} operations processed".format(self.operation, end-start, len(data)))
 
-        except Exception, exc:
+        except Exception as exc:
 
             # Not so typical: handle integrity constraints (generate warnings)
             if exc.__class__.__name__ != "IntegrityError":
@@ -711,7 +711,7 @@ class DBBatcher:
                     self.cursor.execute(self.operation, record)
                     self.conn.commit()
 
-                except Exception, exc:
+                except Exception as exc:
 
                     # This record is the culprit
                     if exc.__class__.__name__ != "IntegrityError":
@@ -737,7 +737,7 @@ class DBBatcher:
 
 def chunks(l, n):
     """ Yield successive n-sized chunks from l. Via Stack Overflow."""
-    for i in xrange(0, len(l), n):
+    for i in range(0, len(l), n):
         yield (i+n, l[i:i+n] )
 
 def bib_scalar(biblio, key):

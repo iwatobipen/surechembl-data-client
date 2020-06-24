@@ -77,10 +77,10 @@ def main():
                     overwrite=args.overwrite,
                     allow_doc_dups=True)
 
-        for bib_file in filter( lambda f: f.endswith("biblio.json"), input_files):
+        for bib_file in [f for f in input_files if f.endswith("biblio.json")]:
             loader.load_biblio( "{}/{}".format( args.working_dir,bib_file ), preload_ids=args.preload_bib_ids )
 
-        for chem_file in filter( lambda f: f.endswith("chemicals.tsv"), input_files):
+        for chem_file in [f for f in input_files if f.endswith("chemicals.tsv")]:
             update = "supp" in chem_file
             if update: logger.info("Supplementary chemical file detected - setting parameters to handle duplicate records")
 
@@ -88,7 +88,7 @@ def main():
 
         logger.info("Processing complete, exiting")
 
-    except db_pkg.DatabaseError, exc:
+    except db_pkg.DatabaseError as exc:
         # Specialized display handling for Database exceptions
         logger.error( "Database exception detected: {}".format( exc ) )
         raise
@@ -154,7 +154,7 @@ def _get_files_retry(args, reader):
 
         download_list = retry(5, _get_target_downloads, [args,reader], sleep_secs=180)
 
-    except Exception, exc:
+    except Exception as exc:
 
         logger.error( "Exception detected in _get_target_downloads! Message: {}".format(exc.message) )
         sys.exit(1)

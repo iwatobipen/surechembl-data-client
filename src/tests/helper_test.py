@@ -49,7 +49,7 @@ class HelperTests(unittest.TestCase):
     	try:
         	retry( 5, self.f, self.fparms )
         	self.fail("Exception expected")
-    	except Exception, e:
+    	except Exception as e:
     		self.assertEqual( 'some persistent error', str(e) )
 	        self.f.assert_called_with( 'parm1',2,True )
 	        self.assertEqual(5, self.f.call_count)   

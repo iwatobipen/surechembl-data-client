@@ -24,7 +24,7 @@ class DataLoaderTests(unittest.TestCase):
         self.metadata.create_all(self.db)
 
     def test_create_doc_loader(self):
-        self.failUnless( isinstance(self.loader, DataLoader) )
+        self.assertTrue( isinstance(self.loader, DataLoader) )
 
     ###### Biblio loading tests ######
 
@@ -36,7 +36,7 @@ class DataLoaderTests(unittest.TestCase):
     def test_write_docs_many(self):
         result = self.load_n_query('data/biblio_typical.json')
         rows = result.fetchall()
-        self.failUnlessEqual( 25, len(rows) )
+        self.assertEqual( 25, len(rows) )
         self.check_doc_row( rows[0], (1,'WO-2013127697-A1',date(2013,9,6),0,47747634) )
         self.check_doc_row( rows[1], (2,'WO-2013127698-A1',date(2013,9,6),0,47748611) )
         self.check_doc_row( rows[24], (25,'WO-2013189394-A2',date(2013,12,27),0,49769540) )
@@ -45,7 +45,7 @@ class DataLoaderTests(unittest.TestCase):
         self.load(['data/biblio_single_row.json'])
         self.load(['data/biblio_typical.json'])
         rows = self.query_all(['schembl_document']).fetchall()
-        self.failUnlessEqual( 25, len( rows ) )
+        self.assertEqual( 25, len( rows ) )
         self.check_doc_row( rows[0], (1,'WO-2013127697-A1',date(2013,9,6),0,47747634) )
 
     def test_unexpected_disallowed_duplicate(self):
@@ -53,38 +53,38 @@ class DataLoaderTests(unittest.TestCase):
             self.load(['data/biblio_single_row.json'])
             DataLoader( self.db, self.test_classifications, allow_doc_dups=False ).load_biblio('data/biblio_typical.json')
             self.fail("Exception was expected")
-        except RuntimeError,exc:
-            self.failUnlessEqual("An Integrity error was detected when inserting document WO-2013127697-A1. This indicates "\
+        except RuntimeError as exc:
+            self.assertEqual("An Integrity error was detected when inserting document WO-2013127697-A1. This indicates "\
                                  "insertion of an existing document, but duplicates have been disallowed", exc.message)
 
 
 
     def test_sequence_definitions(self):
         mdata = self.loader.db_metadata()
-        self.failUnlessEqual( 'schembl_document_id', mdata.tables['schembl_document'].c.id.default.name )
+        self.assertEqual( 'schembl_document_id', mdata.tables['schembl_document'].c.id.default.name )
 
     def test_titles(self):
         result = self.load_n_query('data/biblio_typical.json', ['schembl_document_title'])
         rows = result.fetchall()
-        self.failUnlessEqual( 62, len(rows) )
+        self.assertEqual( 62, len(rows) )
         # Row ordering is based on dictionary; may be brittle
-        self.check_title_row( rows[0],  (1, "FR", u"UTILISATION D'UN FILM ADHÉSIF À RÉACTIVITÉ LATENTE POUR LE COLLAGE DE PLASTIQUE SUR DE L'ALUMINIUM ANODISÉ") )
-        self.check_title_row( rows[1],  (1, "DE", u"VERWENDUNG EINES LATENTREAKTIVEN KLEBEFILMS ZUR VERKLEBUNG VON ELOXIERTEM ALUMINIUM MIT KUNSTSTOFF") )
-        self.check_title_row( rows[2],  (1, "EN", u"USE OF A LATENTLY REACTIVE ADHESIVE FILM FOR ADHESIVE BONDING OF ELOXATED ALUMINIUM TO PLASTIC") )
-        self.check_title_row( rows[56], (24,"FR", u"PROCÉDÉ DE PILOTAGE DE MISE EN FORME DE TRAFIC ET ORGANE PILOTAGE") )
-        self.check_title_row( rows[57], (24,"EN", u"TRAFFIC SHAPING DRIVE METHOD AND DRIVER") )
-        self.check_title_row( rows[58], (24,"ZH", u"一种流量整形的驱动方法及驱动器") )
-        self.check_title_row( rows[59], (25,"FR", u"PROCÉDÉ, SYSTÈME ET DISPOSITIF D'ACQUISITION D'INFORMATIONS SUR LES RESSOURCES, POUR DISPOSITIF TERMINAL DE L'INTERNET DES OBJETS") )
-        self.check_title_row( rows[60], (25,"EN", u"RESOURCE INFORMATION ACQUISITION METHOD, SYSTEM AND DEVICE FOR INTERNET OF THINGS TERMINAL DEVICE") )
-        self.check_title_row( rows[61], (25,"ZH", u"一种物联网终端设备的资源信息获取方法、系统及设备") )
+        self.check_title_row( rows[0],  (1, "FR", "UTILISATION D'UN FILM ADHÉSIF À RÉACTIVITÉ LATENTE POUR LE COLLAGE DE PLASTIQUE SUR DE L'ALUMINIUM ANODISÉ") )
+        self.check_title_row( rows[1],  (1, "DE", "VERWENDUNG EINES LATENTREAKTIVEN KLEBEFILMS ZUR VERKLEBUNG VON ELOXIERTEM ALUMINIUM MIT KUNSTSTOFF") )
+        self.check_title_row( rows[2],  (1, "EN", "USE OF A LATENTLY REACTIVE ADHESIVE FILM FOR ADHESIVE BONDING OF ELOXATED ALUMINIUM TO PLASTIC") )
+        self.check_title_row( rows[56], (24,"FR", "PROCÉDÉ DE PILOTAGE DE MISE EN FORME DE TRAFIC ET ORGANE PILOTAGE") )
+        self.check_title_row( rows[57], (24,"EN", "TRAFFIC SHAPING DRIVE METHOD AND DRIVER") )
+        self.check_title_row( rows[58], (24,"ZH", "一种流量整形的驱动方法及驱动器") )
+        self.check_title_row( rows[59], (25,"FR", "PROCÉDÉ, SYSTÈME ET DISPOSITIF D'ACQUISITION D'INFORMATIONS SUR LES RESSOURCES, POUR DISPOSITIF TERMINAL DE L'INTERNET DES OBJETS") )
+        self.check_title_row( rows[60], (25,"EN", "RESOURCE INFORMATION ACQUISITION METHOD, SYSTEM AND DEVICE FOR INTERNET OF THINGS TERMINAL DEVICE") )
+        self.check_title_row( rows[61], (25,"ZH", "一种物联网终端设备的资源信息获取方法、系统及设备") )
 
     def test_titles_duplicate(self):
         rows = self.load_n_query('data/biblio_dup_titles.json', ['schembl_document_title']).fetchall()
-        self.failUnlessEqual( 4, len(rows) )
-        self.check_title_row( rows[0],  (1, "FR", u"UTILISATION D'UN FILM ADHÉSIF À RÉACTIVITÉ LATENTE POUR LE COLLAGE DE PLASTIQUE SUR DE L'ALUMINIUM ANODISÉ") )
-        self.check_title_row( rows[1],  (1, "DE", u"VERWENDUNG EINES LATENTREAKTIVEN KLEBEFILMS ZUR VERKLEBUNG VON ELOXIERTEM ALUMINIUM MIT KUNSTSTOFF") )
-        self.check_title_row( rows[2],  (1, "EN", u"USE OF A LATENTLY REACTIVE ADHESIVE FILM FOR ADHESIVE BONDING") )
-        self.check_title_row( rows[3],  (2, "DE", u"VERWENDUNG EINES LATENTREAKTIVEN KLEBEFILMS ZUR VERKLEBUNG VON ELOXIERTEM ALUMINIUM MIT KUNSTSTOFF") )
+        self.assertEqual( 4, len(rows) )
+        self.check_title_row( rows[0],  (1, "FR", "UTILISATION D'UN FILM ADHÉSIF À RÉACTIVITÉ LATENTE POUR LE COLLAGE DE PLASTIQUE SUR DE L'ALUMINIUM ANODISÉ") )
+        self.check_title_row( rows[1],  (1, "DE", "VERWENDUNG EINES LATENTREAKTIVEN KLEBEFILMS ZUR VERKLEBUNG VON ELOXIERTEM ALUMINIUM MIT KUNSTSTOFF") )
+        self.check_title_row( rows[2],  (1, "EN", "USE OF A LATENTLY REACTIVE ADHESIVE FILM FOR ADHESIVE BONDING") )
+        self.check_title_row( rows[3],  (2, "DE", "VERWENDUNG EINES LATENTREAKTIVEN KLEBEFILMS ZUR VERKLEBUNG VON ELOXIERTEM ALUMINIUM MIT KUNSTSTOFF") )
 
     def test_classifications_simple(self):
         result = self.load_n_query('data/biblio_single_row.json', ['schembl_document_class'])
@@ -124,17 +124,17 @@ class DataLoaderTests(unittest.TestCase):
 
         for row in rows:
             expect_relevant = row['scpn'] in relevant
-            self.failUnlessEqual(int(expect_relevant), row['life_sci_relevant'])
+            self.assertEqual(int(expect_relevant), row['life_sci_relevant'])
 
     def test_classifications_set(self):
         default_classes = set(["A01", "A23", "A24", "A61", "A62B","C05", "C06", "C07", "C08", "C09", "C10", "C11", "C12", "C13", "C14","G01N"])
         local_loader = DataLoader(self.db)
-        self.failUnlessEqual( default_classes,           local_loader.relevant_classifications() )
-        self.failUnlessEqual( self.test_classifications, self.loader.relevant_classifications() )
+        self.assertEqual( default_classes,           local_loader.relevant_classifications() )
+        self.assertEqual( self.test_classifications, self.loader.relevant_classifications() )
 
     def test_missing_data_handled(self):
         rows = self.load_n_query('data/biblio_missing_data.json').fetchall()
-        self.failUnlessEqual( 3, len(rows) )
+        self.assertEqual( 3, len(rows) )
         self.check_doc_row( rows[0], (1,'WO-2013127697-A1',date(2013,9,6),0,47747634) )
         self.check_doc_row( rows[1], (2,'WO-2013127698-A1',date(2013,9,6),0,47748611) )
         self.check_doc_row( rows[2], (3,'WO-2013189394-A2',date(2013,12,27),0,49769540) )
@@ -149,27 +149,27 @@ class DataLoaderTests(unittest.TestCase):
         simple_loader = DataLoader( self.db, self.test_classifications, load_titles=False )
         simple_loader.load_biblio( 'data/biblio_typical.json' )
         rows = self.query_all(['schembl_document_title']).fetchall()
-        self.failUnlessEqual(0, len(rows))
+        self.assertEqual(0, len(rows))
 
     def test_disable_classifications(self):
         simple_loader = DataLoader( self.db, self.test_classifications, load_classifications=False )
         simple_loader.load_biblio( 'data/biblio_typical.json' )
         rows = self.query_all(['schembl_document_class']).fetchall()
-        self.failUnlessEqual(0, len(rows))
+        self.assertEqual(0, len(rows))
 
     def test_replace_document(self):
         simple_loader = DataLoader( self.db, self.test_classifications, overwrite=True )
         simple_loader.load_biblio( 'data/biblio_typical.json' )
 
         rows = self.query_all(['schembl_document']).fetchall()
-        self.failUnlessEqual( 25, len(rows) )
+        self.assertEqual( 25, len(rows) )
         self.check_doc_row( rows[0], (1,'WO-2013127697-A1',date(2013,9,6),0,47747634) )
         self.check_doc_row( rows[18], (19,'WO-2013189302-A1',date(2013,12,27),0,49768126) )
 
         simple_loader.load_biblio( 'data/biblio_typical_update.json' )
 
         rows = self.query_all(['schembl_document']).fetchall()
-        self.failUnlessEqual( 25, len(rows) )
+        self.assertEqual( 25, len(rows) )
         self.check_doc_row( rows[0], (1,'WO-2013127697-A1',date(2013,9,5),0,47474747) )
         self.check_doc_row( rows[18], (19,'WO-2013189302-A1',date(2013,12,31),1,47474748) ) # This record is now life-sci-relevant
 
@@ -180,14 +180,14 @@ class DataLoaderTests(unittest.TestCase):
         updating_loader = DataLoader( self.db, self.test_classifications, overwrite=True )
 
         updating_loader.load_biblio( 'data/biblio_typical.json' )
-        self.verify_titles( 1, {'DE':u"VERWENDUNG EINES LATENTREAKTIVEN KLEBEFILMS ZUR VERKLEBUNG VON ELOXIERTEM ALUMINIUM MIT KUNSTSTOFF", 
-                                'FR':u"UTILISATION D'UN FILM ADHÉSIF À RÉACTIVITÉ LATENTE POUR LE COLLAGE DE PLASTIQUE SUR DE L'ALUMINIUM ANODISÉ",     
-                                'EN':u"USE OF A LATENTLY REACTIVE ADHESIVE FILM FOR ADHESIVE BONDING OF ELOXATED ALUMINIUM TO PLASTIC" } )
+        self.verify_titles( 1, {'DE':"VERWENDUNG EINES LATENTREAKTIVEN KLEBEFILMS ZUR VERKLEBUNG VON ELOXIERTEM ALUMINIUM MIT KUNSTSTOFF", 
+                                'FR':"UTILISATION D'UN FILM ADHÉSIF À RÉACTIVITÉ LATENTE POUR LE COLLAGE DE PLASTIQUE SUR DE L'ALUMINIUM ANODISÉ",     
+                                'EN':"USE OF A LATENTLY REACTIVE ADHESIVE FILM FOR ADHESIVE BONDING OF ELOXATED ALUMINIUM TO PLASTIC" } )
 
         updating_loader.load_biblio( 'data/biblio_typical_update.json' )
 
-        self.verify_titles( 1, {'DE':u"Dis ist der neu titlen", 
-                                'ZH':u"寻设备息的传消呼方法和输" } )
+        self.verify_titles( 1, {'DE':"Dis ist der neu titlen", 
+                                'ZH':"寻设备息的传消呼方法和输" } )
 
     def test_replace_classes(self):
 
@@ -237,7 +237,7 @@ class DataLoaderTests(unittest.TestCase):
             .order_by( chem_table.c.id )
 
         rows = self.db.execute(s).fetchall()
-        self.failUnlessEqual( 19, len(rows) )
+        self.assertEqual( 19, len(rows) )
 
         self.check_chem_row( rows[0], (48,	  94.111,  2930353, 0, 0, 1.67,   1, 1, 1, 0) )
         self.check_chem_row( rows[2], (1645, 146.188, 1077470, 1, 0, -3.215, 3, 4, 0, 5) )
@@ -301,9 +301,9 @@ class DataLoaderTests(unittest.TestCase):
 
         self.verify_chemicals( 
             { 10101010101: (459.45, 2930353, 0,0, 1.67, 1,1,1,0,
-                u"C[C@@H]1[C@H]2[C@H](O)[C@H]3[C@H](N(C)C)C(=C(C(=O)N)C(=O)[C@@]3(O)C(=C2C(=O)c4c(O)c(N)ccc14)O)O",
-                u"InChI=1S/C22H25N3O8/c1-6-7-4-5-8(23)15(26)10(7)16(27)11-9(6)17(28)13-14(25(2)3)18(29)12(21(24)32)20(31)22(13,33)19(11)30/h4-6,9,13-14,17,26,28-30,33H,23H2,1-3H3,(H2,24,32)/t6-,9+,13+,14-,17-,22-/m0/s1",
-                u"USMLMJGLDDOVEI-PLYBKPSTSA-N") } )
+                "C[C@@H]1[C@H]2[C@H](O)[C@H]3[C@H](N(C)C)C(=C(C(=O)N)C(=O)[C@@]3(O)C(=C2C(=O)c4c(O)c(N)ccc14)O)O",
+                "InChI=1S/C22H25N3O8/c1-6-7-4-5-8(23)15(26)10(7)16(27)11-9(6)17(28)13-14(25(2)3)18(29)12(21(24)32)20(31)22(13,33)19(11)30/h4-6,9,13-14,17,26,28-30,33H,23H2,1-3H3,(H2,24,32)/t6-,9+,13+,14-,17-,22-/m0/s1",
+                "USMLMJGLDDOVEI-PLYBKPSTSA-N") } )
 
     def test_update_mappings(self):
         
@@ -319,9 +319,9 @@ class DataLoaderTests(unittest.TestCase):
 
         self.verify_chemicals( 
             { 10101010101: (459.45, 2930353, 0,0, 1.67, 1,1,1,0,
-                u"C[C@@H]1[C@H]2[C@H](O)[C@H]3[C@H](N(C)C)C(=C(C(=O)N)C(=O)[C@@]3(O)C(=C2C(=O)c4c(O)c(N)ccc14)O)O",
-                u"InChI=1S/C22H25N3O8/c1-6-7-4-5-8(23)15(26)10(7)16(27)11-9(6)17(28)13-14(25(2)3)18(29)12(21(24)32)20(31)22(13,33)19(11)30/h4-6,9,13-14,17,26,28-30,33H,23H2,1-3H3,(H2,24,32)/t6-,9+,13+,14-,17-,22-/m0/s1",
-                u"USMLMJGLDDOVEI-PLYBKPSTSA-N") } )
+                "C[C@@H]1[C@H]2[C@H](O)[C@H]3[C@H](N(C)C)C(=C(C(=O)N)C(=O)[C@@]3(O)C(=C2C(=O)c4c(O)c(N)ccc14)O)O",
+                "InChI=1S/C22H25N3O8/c1-6-7-4-5-8(23)15(26)10(7)16(27)11-9(6)17(28)13-14(25(2)3)18(29)12(21(24)32)20(31)22(13,33)19(11)30/h4-6,9,13-14,17,26,28-30,33H,23H2,1-3H3,(H2,24,32)/t6-,9+,13+,14-,17-,22-/m0/s1",
+                "USMLMJGLDDOVEI-PLYBKPSTSA-N") } )
 
 
     def prepare_updatable_db(self, overwrite_mode):
@@ -399,7 +399,7 @@ class DataLoaderTests(unittest.TestCase):
 
     def check_row(self,row,fields,expected):
         for i,field in enumerate(fields):
-            self.failUnlessEqual( expected[i], row[field] )
+            self.assertEqual( expected[i], row[field] )
 
 
     def verify_classes(self, doc, system, classes):
@@ -410,7 +410,7 @@ class DataLoaderTests(unittest.TestCase):
             .where( classif_table.c.system == system )
         rows = self.db.execute(s).fetchall()
 
-        self.failUnlessEqual(len(classes), len(rows))
+        self.assertEqual(len(classes), len(rows))
 
         for i,row in enumerate(rows):
             self.check_class_row(row, (doc, classes[i], system) )
@@ -422,7 +422,7 @@ class DataLoaderTests(unittest.TestCase):
             .where( title_table.c.schembl_doc_id == doc )
         rows = self.db.execute(s).fetchall()
 
-        self.failUnlessEqual(len(titles), len(rows))
+        self.assertEqual(len(titles), len(rows))
 
         for i,row in enumerate(rows):
             found_lang = row[1]
@@ -435,10 +435,10 @@ class DataLoaderTests(unittest.TestCase):
 
         s = select( [chem_table, struct_table] )\
             .where( chem_table.c.id == struct_table.c.schembl_chem_id )\
-            .where( chem_table.c.id.in_(expected_chems.keys() ) )
+            .where( chem_table.c.id.in_(list(expected_chems.keys()) ) )
 
         rows = self.db.execute(s).fetchall()
-        self.failUnlessEqual( len(expected_chems), len(rows) )
+        self.assertEqual( len(expected_chems), len(rows) )
 
         for row in rows:
             found_key = row[0]
@@ -462,7 +462,7 @@ class DataLoaderTests(unittest.TestCase):
             s = select( [mapping_table] ).where( mapping_table.c.schembl_doc_id == doc )
             actual_rows = self.db.execute(s).fetchall()
 
-        self.failUnlessEqual( len(exp_data), len(actual_rows) )
+        self.assertEqual( len(exp_data), len(actual_rows) )
 
         for row in actual_rows:        
             found_key = (row[0], row[1], row[2])
@@ -473,7 +473,7 @@ class DataLoaderTests(unittest.TestCase):
             self.load([file])
             self.fail("A runtime error should have been thrown")
         except RuntimeError as e:
-            self.failUnlessEqual(expected_msg, e.message)
+            self.assertEqual(expected_msg, e.message)
             pass
 
 def main():

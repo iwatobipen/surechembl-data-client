@@ -20,7 +20,7 @@ def retry(max_attempts, func, parms, sleep_secs=0):
 		try:
 			ret_val = func(*parms)			
 			complete = True
-		except Exception, e:
+		except Exception as e:
 			last_exc = e
 			logger.warn( "Exception caught in retry block: [{}]".format(e) )
 			logger.warn( "Sleeping for {} seconds".format(sleep_secs) )
